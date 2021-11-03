@@ -336,6 +336,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
 
             this.clientId = config.getString(ProducerConfig.CLIENT_ID_CONFIG);
 
+            // for transactions
             LogContext logContext;
             if (transactionalId == null)
                 logContext = new LogContext(String.format("[Producer clientId=%s] ", clientId));
@@ -344,6 +345,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             log = logContext.logger(KafkaProducer.class);
             log.trace("Starting the Kafka producer");
 
+            // monitoring metrics
             Map<String, String> metricTags = Collections.singletonMap("client-id", clientId);
             MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ProducerConfig.METRICS_NUM_SAMPLES_CONFIG))
                     .timeWindow(config.getLong(ProducerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG), TimeUnit.MILLISECONDS)
@@ -359,11 +361,17 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     config.originalsWithPrefix(CommonClientConfigs.METRICS_CONTEXT_PREFIX));
             this.metrics = new Metrics(metricConfig, reporters, time, metricsContext);
             this.producerMetrics = new KafkaProducerMetrics(metrics);
+
+            // set partitioner; default is DefaultPartitioner
             this.partitioner = config.getConfiguredInstance(
                     ProducerConfig.PARTITIONER_CLASS_CONFIG,
                     Partitioner.class,
                     Collections.singletonMap(ProducerConfig.CLIENT_ID_CONFIG, clientId));
+
+            // set time between retries of failed requests
             long retryBackoffMs = config.getLong(ProducerConfig.RETRY_BACKOFF_MS_CONFIG);
+
+            // set serializers
             if (keySerializer == null) {
                 this.keySerializer = config.getConfiguredInstance(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
                                                                                          Serializer.class);
@@ -381,6 +389,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 this.valueSerializer = valueSerializer;
             }
 
+            // set interceptors
             List<ProducerInterceptor<K, V>> interceptorList = (List) config.getConfiguredInstances(
                     ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
                     ProducerInterceptor.class,
@@ -391,15 +400,23 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 this.interceptors = new ProducerInterceptors<>(interceptorList);
             ClusterResourceListeners clusterResourceListeners = configureClusterResourceListeners(keySerializer,
                     valueSerializer, interceptorList, reporters);
+
+            // Default 1M; heuristic 10M
             this.maxRequestSize = config.getInt(ProducerConfig.MAX_REQUEST_SIZE_CONFIG);
+            // Default 32M
             this.totalMemorySize = config.getLong(ProducerConfig.BUFFER_MEMORY_CONFIG);
+            // set compression type for higher throughput
             this.compressionType = CompressionType.forName(config.getString(ProducerConfig.COMPRESSION_TYPE_CONFIG));
 
+            // Default 60s
             this.maxBlockTimeMs = config.getLong(ProducerConfig.MAX_BLOCK_MS_CONFIG);
+            // Default 120s
             int deliveryTimeoutMs = configureDeliveryTimeout(config, log);
 
             this.apiVersions = new ApiVersions();
             this.transactionManager = configureTransactionState(config, logContext);
+
+            // set up record accumulator that batches records before sending
             this.accumulator = new RecordAccumulator(logContext,
                     config.getInt(ProducerConfig.BATCH_SIZE_CONFIG),
                     this.compressionType,
@@ -416,6 +433,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(
                     config.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG),
                     config.getString(ProducerConfig.CLIENT_DNS_LOOKUP_CONFIG));
+
             if (metadata != null) {
                 this.metadata = metadata;
             } else {
@@ -427,13 +445,17 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                         Time.SYSTEM);
                 this.metadata.bootstrap(addresses);
             }
+
             this.errors = this.metrics.sensor("errors");
             this.sender = newSender(logContext, kafkaClient, this.metadata);
             String ioThreadName = NETWORK_THREAD_PREFIX + " | " + clientId;
+            // encapsulate business code into thread code
             this.ioThread = new KafkaThread(ioThreadName, this.sender, true);
             this.ioThread.start();
             config.logUnused();
             AppInfoParser.registerAppInfo(JMX_PREFIX, clientId, metrics, time.milliseconds());
+            System.out.println("Hey I watched the video explaining the constructor of KafkaProducer. " +
+                    "It's cool. Hope I could finish the project.");
             log.debug("Kafka producer started");
         } catch (Throwable t) {
             // call close methods if internal objects are already constructed this is to prevent resource leak. see KAFKA-2121
@@ -450,6 +472,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
         ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(producerConfig, time, logContext);
         ProducerMetrics metricsRegistry = new ProducerMetrics(this.metrics);
         Sensor throttleTimeSensor = Sender.throttleTimeSensor(metricsRegistry.senderMetrics);
+
         KafkaClient client = kafkaClient != null ? kafkaClient : new NetworkClient(
                 new Selector(producerConfig.getLong(ProducerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG),
                         this.metrics, time, "producer", channelBuilder, logContext),
@@ -468,6 +491,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 apiVersions,
                 throttleTimeSensor,
                 logContext);
+        /**
+         *  0- no ack at all; 1- only leader ack; -1- all ack
+         * */
         short acks = configureAcks(producerConfig, log);
         return new Sender(logContext,
                 client,
