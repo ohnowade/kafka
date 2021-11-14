@@ -1335,10 +1335,13 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      */
     private int partition(ProducerRecord<K, V> record, byte[] serializedKey, Cluster cluster, int recordSize) {
         Integer partition = record.partition();
-        return partition != null ?
-                partition :
-                partitioner.partition(
-                        record.topic(), serializedKey, cluster, recordSize);
+        if (partition != null) {
+            System.out.printf("Record is already assigned a partition %d.\n", partition);
+            return partition;
+        } else {
+            System.out.println("Partition the record using the feedback partitioner.");
+            return partitioner.partition(record.topic(), serializedKey, cluster, recordSize);
+        }
     }
 
     private void throwIfInvalidGroupMetadata(ConsumerGroupMetadata groupMetadata) {
