@@ -973,11 +973,6 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                         " specified in value.serializer", cce);
             }
 
-            // calculate partition
-            int partition = partition(record, serializedKey, serializedValue, cluster);
-
-            // encapsulate partition object
-            tp = new TopicPartition(record.topic(), partition);
 
             setReadOnly(record.headers());
             Header[] headers = record.headers().toArray();
@@ -986,6 +981,12 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             int serializedSize = AbstractRecords.estimateSizeInBytesUpperBound(apiVersions.maxUsableProduceMagic(),
                     compressionType, serializedKey, serializedValue, headers);
             ensureValidRecordSize(serializedSize);
+
+            // calculate partition
+            int partition = partition(record, serializedKey, cluster, serializedSize);
+
+            // encapsulate partition object
+            tp = new TopicPartition(record.topic(), partition);
 
             // TODO: only need to update the queue, which is inside Cluster, after calculating the size of the record
 
@@ -1003,12 +1004,12 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
 
             // put the message into record accumulator for batching
             RecordAccumulator.RecordAppendResult result = accumulator.append(tp, timestamp, serializedKey,
-                    serializedValue, headers, interceptCallback, remainingWaitMs, true, nowMs);
+                    serializedValue, headers, interceptCallback, remainingWaitMs, false, nowMs);
 
             if (result.abortForNewBatch) {
                 int prevPartition = partition;
                 partitioner.onNewBatch(record.topic(), cluster, prevPartition);
-                partition = partition(record, serializedKey, serializedValue, cluster);
+                partition = partition(record, serializedKey, cluster, serializedSize);
                 tp = new TopicPartition(record.topic(), partition);
                 if (log.isTraceEnabled()) {
                     log.trace("Retrying append due to new batch creation for topic {} partition {}. The old partition was {}", record.topic(), partition, prevPartition);
@@ -1332,12 +1333,12 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * if the record has partition returns the value otherwise
      * calls configured partitioner class to compute the partition.
      */
-    private int partition(ProducerRecord<K, V> record, byte[] serializedKey, byte[] serializedValue, Cluster cluster) {
+    private int partition(ProducerRecord<K, V> record, byte[] serializedKey, Cluster cluster, int recordSize) {
         Integer partition = record.partition();
         return partition != null ?
                 partition :
                 partitioner.partition(
-                        record.topic(), record.key(), serializedKey, record.value(), serializedValue, cluster);
+                        record.topic(), serializedKey, cluster, recordSize);
     }
 
     private void throwIfInvalidGroupMetadata(ConsumerGroupMetadata groupMetadata) {
