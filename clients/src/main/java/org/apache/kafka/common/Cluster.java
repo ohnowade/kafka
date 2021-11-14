@@ -49,6 +49,10 @@ public final class Cluster {
     private final Map<String, Uuid> topicIds;
     private final Map<Uuid, String> topicNames;
 
+    // TODO: this is where the feedback queues reside
+
+    // TODO: add functions to interact with the queues
+
     /**
      * Create a new cluster with the given id, nodes and partitions
      * @param nodes The nodes in the cluster
@@ -182,6 +186,7 @@ public final class Cluster {
 
         this.partitionsByTopicPartition = Collections.unmodifiableMap(tmpPartitionsByTopicPartition);
         this.partitionsByTopic = Collections.unmodifiableMap(tmpPartitionsByTopic);
+        // TODO: intercept the field so that available partitions would be retrieved from the feedback queues
         this.availablePartitionsByTopic = Collections.unmodifiableMap(tmpAvailablePartitionsByTopic);
         this.partitionsByNode = Collections.unmodifiableMap(tmpPartitionsByNode);
         this.topicIds = Collections.unmodifiableMap(topicIds);
@@ -193,6 +198,8 @@ public final class Cluster {
         this.invalidTopics = Collections.unmodifiableSet(invalidTopics);
         this.internalTopics = Collections.unmodifiableSet(internalTopics);
         this.controller = controller;
+
+        // TODO: could construct the feedback queue here
     }
 
     /**
@@ -308,6 +315,10 @@ public final class Cluster {
     public List<PartitionInfo> availablePartitionsForTopic(String topic) {
         return availablePartitionsByTopic.getOrDefault(topic, Collections.emptyList());
     }
+
+    // TODO: leave the availablePartitionsForTopic() method as is, but create a new method
+    //  to retrieve the list of available partition numbers from the feedback queue of a
+    //  specified topic
 
     /**
      * Get the list of partitions whose leader is this node

@@ -324,7 +324,10 @@ public class Sender implements Runnable {
         }
 
         long currentTimeMs = time.milliseconds();
+
+        // prepare the requests
         long pollTimeout = sendProducerData(currentTimeMs);
+        // poll the requests from the cluster
         client.poll(pollTimeout, currentTimeMs);
     }
 

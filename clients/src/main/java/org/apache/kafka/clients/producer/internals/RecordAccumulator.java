@@ -208,8 +208,11 @@ public final class RecordAccumulator {
                 return new RecordAppendResult(null, false, false, true);
             }
 
+            // the size of the new batch is determined not only by the configured batchSize but also the size of the message
             byte maxUsableMagic = apiVersions.maxUsableProduceMagic();
             int size = Math.max(this.batchSize, AbstractRecords.estimateSizeInBytesUpperBound(maxUsableMagic, compression, key, value, headers));
+
+            // allocate memory for the new batch
             log.trace("Allocating a new {} byte message buffer for topic {} partition {} with remaining timeout {}ms", size, tp.topic(), tp.partition(), maxTimeToBlock);
             buffer = free.allocate(size, maxTimeToBlock);
 

@@ -268,7 +268,8 @@ public class Metadata implements Closeable {
 
         this.needPartialUpdate = requestVersion < this.requestVersion;
         this.lastRefreshMs = nowMs;
-        this.updateVersion += 1;
+        this.updateVersion += 1; // makes wait stop
+
         if (!isPartialUpdate) {
             this.needFullUpdate = false;
             this.lastSuccessfulRefreshMs = nowMs;
@@ -279,6 +280,7 @@ public class Metadata implements Closeable {
         this.cache = handleMetadataResponse(response, isPartialUpdate, nowMs);
 
         Cluster cluster = cache.cluster();
+
         maybeSetMetadataError(cluster);
 
         this.lastSeenLeaderEpochs.keySet().removeIf(tp -> !retainTopic(tp.topic(), false, nowMs));
@@ -362,6 +364,11 @@ public class Metadata implements Closeable {
                     unauthorizedTopics.add(metadata.topic());
             }
         }
+
+        /**
+         * TODO: retrieve the newest Cluster and update the feedback queues here, or
+         * do the update inside MetadataCache class
+          */
 
         Map<Integer, Node> nodes = metadataResponse.brokersById();
         if (isPartialUpdate)

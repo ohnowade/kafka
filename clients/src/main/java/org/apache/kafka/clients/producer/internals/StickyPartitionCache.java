@@ -50,6 +50,7 @@ public class StickyPartitionCache {
         // Check that the current sticky partition for the topic is either not set or that the partition that 
         // triggered the new batch matches the sticky partition that needs to be changed.
         if (oldPart == null || oldPart == prevPartition) {
+            // TODO: call a new method to get the list of available partition number
             List<PartitionInfo> availablePartitions = cluster.availablePartitionsForTopic(topic);
             if (availablePartitions.size() < 1) {
                 Integer random = Utils.toPositive(ThreadLocalRandom.current().nextInt());

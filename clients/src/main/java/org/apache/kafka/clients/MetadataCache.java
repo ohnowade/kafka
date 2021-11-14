@@ -98,6 +98,7 @@ public class MetadataCache {
         } else {
             this.clusterInstance = clusterInstance;
         }
+
     }
 
     Optional<PartitionMetadata> partitionMetadata(TopicPartition topicPartition) {
