@@ -40,6 +40,11 @@ public class MockPartitioner implements Partitioner {
     }
 
     @Override
+    public int partition(String topic, byte[] keyBytes, Cluster cluster, int recordSize) {
+        return 0;
+    }
+
+    @Override
     public void close() {
         CLOSE_COUNT.incrementAndGet();
     }

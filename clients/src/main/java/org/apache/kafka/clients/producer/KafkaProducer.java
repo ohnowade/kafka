@@ -25,15 +25,7 @@ import org.apache.kafka.clients.consumer.ConsumerGroupMetadata;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.consumer.OffsetCommitCallback;
-import org.apache.kafka.clients.producer.internals.BufferPool;
-import org.apache.kafka.clients.producer.internals.KafkaProducerMetrics;
-import org.apache.kafka.clients.producer.internals.ProducerInterceptors;
-import org.apache.kafka.clients.producer.internals.ProducerMetadata;
-import org.apache.kafka.clients.producer.internals.ProducerMetrics;
-import org.apache.kafka.clients.producer.internals.RecordAccumulator;
-import org.apache.kafka.clients.producer.internals.Sender;
-import org.apache.kafka.clients.producer.internals.TransactionManager;
-import org.apache.kafka.clients.producer.internals.TransactionalRequestResult;
+import org.apache.kafka.clients.producer.internals.*;
 import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.Metric;
@@ -363,10 +355,11 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             this.producerMetrics = new KafkaProducerMetrics(metrics);
 
             // set partitioner; default is DefaultPartitioner
-            this.partitioner = config.getConfiguredInstance(
-                    ProducerConfig.PARTITIONER_CLASS_CONFIG,
-                    Partitioner.class,
-                    Collections.singletonMap(ProducerConfig.CLIENT_ID_CONFIG, clientId));
+//            this.partitioner = config.getConfiguredInstance(
+//                    ProducerConfig.PARTITIONER_CLASS_CONFIG,
+//                    Partitioner.class,
+//                    Collections.singletonMap(ProducerConfig.CLIENT_ID_CONFIG, clientId));
+            this.partitioner = new FeedbackPartitioner();
 
             // set time between retries of failed requests
             long retryBackoffMs = config.getLong(ProducerConfig.RETRY_BACKOFF_MS_CONFIG);

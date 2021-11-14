@@ -46,12 +46,15 @@ public class FeedbackQueue {
 
     public int nextPartition(int recordSize) {
         lock.lock();
+        System.out.println("Getting next partition.");
         int rs;
         if (prevPartition < 0) {
+            System.out.println("Feedback Queue just initialized.");
             Integer random = Utils.toPositive(ThreadLocalRandom.current().nextInt());
             prevPartitionIndex = random % topQueue.size();
             prevPartition = topQueue.get(prevPartitionIndex);
         } else if (counter.get(prevPartition) >= allotment) {
+            System.out.printf("Partition %d used up its allotment. ", prevPartition);
             bottomQueue.add(prevPartition);
             counter.put(prevPartition, 0);
             int size = topQueue.size();
@@ -65,9 +68,11 @@ public class FeedbackQueue {
             Integer random = Utils.toPositive(ThreadLocalRandom.current().nextInt());
             prevPartitionIndex = random % topQueue.size();
             prevPartition = topQueue.get(prevPartitionIndex);
+            System.out.printf("The next partition chosen is %d.\n", prevPartition);
         }
         counter.compute(prevPartition, (k, v)->v+recordSize);
         rs = prevPartition;
+        System.out.printf("Partition %d is chosen with %d bytes assigned to it.\n", rs, recordSize);
         lock.unlock();
         return rs;
     }

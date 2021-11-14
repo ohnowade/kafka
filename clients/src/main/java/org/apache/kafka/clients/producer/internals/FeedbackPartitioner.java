@@ -23,6 +23,7 @@ public class FeedbackPartitioner implements Partitioner {
         if (fq.hasAvailablePartitions()) {
             return fq.nextPartition(recordSize);
         }
+        System.out.println("No available partitions in Feedback Queue. Randomly choose one.");
         return Utils.toPositive(ThreadLocalRandom.current().nextInt()) %
                 cluster.partitionsForTopic(topic).size();
     }
