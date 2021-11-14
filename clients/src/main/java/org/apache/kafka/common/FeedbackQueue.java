@@ -1,12 +1,96 @@
 package org.apache.kafka.common;
 
-public class FeedbackQueue {
-    // TODO: find efficient way to locate a partition by index,
-    //  move partitions from the top queue to the bottom queue,
-    //  and set bottom queue to top queue (O(1) for all!!)
+import org.apache.kafka.common.utils.Utils;
 
-    // TODO: the queues should be of type List<>,
-    //  there should be a mapping relation between a partition's number and its counter,
-    //  and also a mapping relation between a partition's number and its index
-    //
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class FeedbackQueue {
+    /**
+     * the top queue containing the available partition numbers to be chosen by the partitioner
+     **/
+    private List<Integer> topQueue;
+
+    /**
+     * the bottom queue containing the number of the partitions that use up their allotment, and
+     * it becomes the topQueue when the topQueue is empty
+     * */
+    private List<Integer> bottomQueue;
+
+    private Map<Integer, Integer> counter;
+
+    private int prevPartition;
+    private int prevPartitionIndex;
+
+    private final int allotment;
+
+    private final Lock lock = new ReentrantLock();
+
+    public FeedbackQueue(int allotment, List<PartitionInfo> availablePartitions) {
+        topQueue = new ArrayList<>();
+        bottomQueue = new ArrayList<>();
+        counter = new HashMap<>();
+        prevPartition = -1;
+        prevPartitionIndex = -1;
+        for (PartitionInfo partitionInfo : availablePartitions) {
+            topQueue.add(partitionInfo.partition());
+            counter.put(partitionInfo.partition(), 0);
+        }
+        this.allotment = allotment;
+    }
+
+    public int nextPartition(int recordSize) {
+        lock.lock();
+        int rs;
+        if (prevPartition < 0) {
+            Integer random = Utils.toPositive(ThreadLocalRandom.current().nextInt());
+            prevPartitionIndex = random % topQueue.size();
+            prevPartition = topQueue.get(prevPartitionIndex);
+        } else if (counter.get(prevPartition) >= allotment) {
+            bottomQueue.add(prevPartition);
+            counter.put(prevPartition, 0);
+            int size = topQueue.size();
+            if (size == 1) {
+                topQueue = bottomQueue;
+                bottomQueue = new ArrayList<>();
+            } else {
+                topQueue.set(prevPartitionIndex, topQueue.get(size-1));
+                topQueue.remove(size-1);
+            }
+            Integer random = Utils.toPositive(ThreadLocalRandom.current().nextInt());
+            prevPartitionIndex = random % topQueue.size();
+            prevPartition = topQueue.get(prevPartitionIndex);
+        }
+        counter.compute(prevPartition, (k, v)->v+recordSize);
+        rs = prevPartition;
+        lock.unlock();
+        return rs;
+    }
+
+    public boolean hasAvailablePartitions() {
+        return topQueue.isEmpty();
+    }
+
+    /**
+     * Reset the feedback queue when cluster is updated
+     * */
+    public void reset(List<PartitionInfo> availablePartitions) {
+        lock.lock();
+        topQueue.clear();
+        bottomQueue.clear();
+        counter.clear();
+        prevPartition = -1;
+        prevPartitionIndex = -1;
+        for (PartitionInfo partitionInfo : availablePartitions) {
+            topQueue.add(partitionInfo.partition());
+            counter.put(partitionInfo.partition(), 0);
+        }
+        lock.unlock();
+    }
+
 }

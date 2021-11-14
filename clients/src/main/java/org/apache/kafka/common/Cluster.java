@@ -48,8 +48,8 @@ public final class Cluster {
     private final ClusterResource clusterResource;
     private final Map<String, Uuid> topicIds;
     private final Map<Uuid, String> topicNames;
-
-    // TODO: this is where the feedback queues reside
+    private final Map<String, FeedbackQueue> feedbackQueues;
+    private final int allotment = 32 * 1024;
 
     // TODO: add functions to interact with the queues
 
@@ -186,7 +186,6 @@ public final class Cluster {
 
         this.partitionsByTopicPartition = Collections.unmodifiableMap(tmpPartitionsByTopicPartition);
         this.partitionsByTopic = Collections.unmodifiableMap(tmpPartitionsByTopic);
-        // TODO: intercept the field so that available partitions would be retrieved from the feedback queues
         this.availablePartitionsByTopic = Collections.unmodifiableMap(tmpAvailablePartitionsByTopic);
         this.partitionsByNode = Collections.unmodifiableMap(tmpPartitionsByNode);
         this.topicIds = Collections.unmodifiableMap(topicIds);
@@ -199,7 +198,11 @@ public final class Cluster {
         this.internalTopics = Collections.unmodifiableSet(internalTopics);
         this.controller = controller;
 
-        // TODO: could construct the feedback queue here
+        // construct the feedback queues here
+        this.feedbackQueues = new HashMap<>();
+        for (Map.Entry<String, List<PartitionInfo>> entry : availablePartitionsByTopic.entrySet()) {
+            feedbackQueues.put(entry.getKey(), new FeedbackQueue(allotment, entry.getValue()));
+        }
     }
 
     /**
@@ -319,6 +322,14 @@ public final class Cluster {
     // TODO: leave the availablePartitionsForTopic() method as is, but create a new method
     //  to retrieve the list of available partition numbers from the feedback queue of a
     //  specified topic
+    /**
+     * Get the corresponding feedback queue for the topic
+     * @param topic The topic name
+     * @return the feedback queue under this topic
+     * */
+    public FeedbackQueue getFeedbackQueueForTopic(String topic) {
+        return feedbackQueues.get(topic);
+    }
 
     /**
      * Get the list of partitions whose leader is this node

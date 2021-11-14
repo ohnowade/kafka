@@ -64,6 +64,10 @@ public class RoundRobinPartitioner implements Partitioner {
         }
     }
 
+    public int partition(String topic, byte[] keyBytes, Cluster cluster, int recordSize) {
+        return 0;
+    }
+
     private int nextValue(String topic) {
         AtomicInteger counter = topicCounterMap.computeIfAbsent(topic, k -> {
             return new AtomicInteger(0);

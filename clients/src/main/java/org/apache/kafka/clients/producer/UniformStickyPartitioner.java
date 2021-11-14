@@ -53,6 +53,10 @@ public class UniformStickyPartitioner implements Partitioner {
         return stickyPartitionCache.partition(topic, cluster);
     }
 
+    public int partition(String topic, byte[] keyBytes, Cluster cluster, int recordSize) {
+        return 0;
+    }
+
     public void close() {}
     
     /**
