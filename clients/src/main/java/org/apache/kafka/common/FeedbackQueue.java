@@ -43,11 +43,11 @@ public class FeedbackQueue {
     private int prevPartition;
     private int prevPartitionIndex;
 
-    private int allotment;
+    private static final int allotment = 32 * 1024;
 
     private final Lock lock = new ReentrantLock();
 
-    public FeedbackQueue(int allotment, List<PartitionInfo> availablePartitions) {
+    public FeedbackQueue(List<PartitionInfo> availablePartitions) {
         lock.lock();
         try {
             topQueue = new ArrayList<>();
@@ -59,7 +59,6 @@ public class FeedbackQueue {
                 topQueue.add(partitionInfo.partition());
                 counter.put(partitionInfo.partition(), 0);
             }
-            this.allotment = allotment;
         } finally {
             lock.unlock();
         }
@@ -98,8 +97,9 @@ public class FeedbackQueue {
             return rs;
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            lock.unlock();
             return 0;
+        } finally {
+            lock.unlock();
         }
     }
 

@@ -49,8 +49,6 @@ public final class Cluster {
     private final Map<String, Uuid> topicIds;
     private final Map<Uuid, String> topicNames;
     private final Map<String, FeedbackQueue> feedbackQueues;
-    private final int allotment = 32 * 1024;
-
     // TODO: add functions to interact with the queues
 
     /**
@@ -201,7 +199,7 @@ public final class Cluster {
         // construct the feedback queues here
         this.feedbackQueues = new HashMap<>();
         for (Map.Entry<String, List<PartitionInfo>> entry : availablePartitionsByTopic.entrySet()) {
-            feedbackQueues.put(entry.getKey(), new FeedbackQueue(allotment, entry.getValue()));
+            feedbackQueues.put(entry.getKey(), new FeedbackQueue(entry.getValue()));
         }
     }
 
