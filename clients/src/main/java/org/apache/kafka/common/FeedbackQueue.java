@@ -43,7 +43,7 @@ public class FeedbackQueue {
     private int prevPartition;
     private int prevPartitionIndex;
 
-    private static final int allotment = 32 * 1024;
+    private static final int ALLOTMENT = 32 * 1024;
 
     private final Lock lock = new ReentrantLock();
 
@@ -74,7 +74,7 @@ public class FeedbackQueue {
                 Integer random = Utils.toPositive(ThreadLocalRandom.current().nextInt());
                 prevPartitionIndex = random % topQueue.size();
                 prevPartition = topQueue.get(prevPartitionIndex);
-            } else if (counter.get(prevPartition) >= allotment) {
+            } else if (counter.get(prevPartition) >= ALLOTMENT) {
                 System.out.printf("Partition %d used up its allotment. ", prevPartition);
                 bottomQueue.add(prevPartition);
                 counter.put(prevPartition, 0);
