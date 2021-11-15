@@ -1345,7 +1345,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     private int partition(ProducerRecord<K, V> record, byte[] serializedKey, Cluster cluster, int recordSize) {
         Integer partition = record.partition();
         if (partition != null) {
-            System.out.printf("Record is already assigned a partition %d.\n", partition);
+            System.out.printf("Record is already assigned a partition %d.%n", partition);
             return partition;
         } else {
             System.out.println("Partition the record using the feedback partitioner.");
