@@ -36,12 +36,13 @@ public class FeedbackPartitioner implements Partitioner {
      */
     public int partition(String topic, byte[] keyBytes, Cluster cluster, int recordSize) {
         FeedbackQueue fq = cluster.getFeedbackQueueForTopic(topic);
-        if (fq.hasAvailablePartitions()) {
-            return fq.nextPartition(recordSize);
-        }
-        System.out.println("No available partitions in Feedback Queue. Randomly choose one.");
-        return Utils.toPositive(ThreadLocalRandom.current().nextInt()) %
-                cluster.partitionsForTopic(topic).size();
+//        if (fq.hasAvailablePartitions()) {
+//            return fq.nextPartition(recordSize);
+//        }
+//        System.out.println("No available partitions in Feedback Queue. Randomly choose one.");
+//        return Utils.toPositive(ThreadLocalRandom.current().nextInt()) %
+//                cluster.partitionsForTopic(topic).size();
+        return fq.nextPartition(recordSize);
     }
 
     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
