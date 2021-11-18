@@ -48,8 +48,6 @@ public final class Cluster {
     private final ClusterResource clusterResource;
     private final Map<String, Uuid> topicIds;
     private final Map<Uuid, String> topicNames;
-    private final Map<String, FeedbackQueue> feedbackQueues;
-    // TODO: add functions to interact with the queues
 
     /**
      * Create a new cluster with the given id, nodes and partitions
@@ -195,12 +193,6 @@ public final class Cluster {
         this.invalidTopics = Collections.unmodifiableSet(invalidTopics);
         this.internalTopics = Collections.unmodifiableSet(internalTopics);
         this.controller = controller;
-
-        // construct the feedback queues here
-        this.feedbackQueues = new HashMap<>();
-        for (Map.Entry<String, List<PartitionInfo>> entry : availablePartitionsByTopic.entrySet()) {
-            feedbackQueues.put(entry.getKey(), new FeedbackQueue(entry.getValue()));
-        }
     }
 
     /**
@@ -315,18 +307,6 @@ public final class Cluster {
      */
     public List<PartitionInfo> availablePartitionsForTopic(String topic) {
         return availablePartitionsByTopic.getOrDefault(topic, Collections.emptyList());
-    }
-
-    // TODO: leave the availablePartitionsForTopic() method as is, but create a new method
-    //  to retrieve the list of available partition numbers from the feedback queue of a
-    //  specified topic
-    /**
-     * Get the corresponding feedback queue for the topic
-     * @param topic The topic name
-     * @return the feedback queue under this topic
-     * */
-    public FeedbackQueue getFeedbackQueueForTopic(String topic) {
-        return feedbackQueues.get(topic);
     }
 
     /**

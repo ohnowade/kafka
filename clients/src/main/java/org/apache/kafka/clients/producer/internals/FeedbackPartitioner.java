@@ -18,24 +18,22 @@ package org.apache.kafka.clients.producer.internals;
 
 import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.common.Cluster;
-import org.apache.kafka.common.FeedbackQueue;
-import org.apache.kafka.common.utils.Utils;
+import org.apache.kafka.common.FeedbackQueues;
 
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class FeedbackPartitioner implements Partitioner {
+    FeedbackQueues feedbackQueues = FeedbackQueues.getInstance();
 
     /**
      * Compute the partition for the record
      *
      * @param topic      The topic name
      * @param keyBytes   The serialized key to partition on (or null if no key)
-     * @param cluster    The current cluster metadata
      * @param recordSize The size of the given record
      */
-    public int partition(String topic, byte[] keyBytes, Cluster cluster, int recordSize) {
-        return cluster.getFeedbackQueueForTopic(topic).nextPartition(recordSize);
+    public int partition(String topic, byte[] keyBytes, int recordSize) {
+        return feedbackQueues.getPartition(topic, recordSize);
     }
 
     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {

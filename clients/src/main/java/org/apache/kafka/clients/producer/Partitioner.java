@@ -43,10 +43,9 @@ public interface Partitioner extends Configurable, Closeable {
      *
      * @param topic The topic name
      * @param keyBytes The serialized key to partition on (or null if no key)
-     * @param cluster The current cluster metadata
      * @param recordSize The size of the given record
      */
-    int partition(String topic, byte[] keyBytes, Cluster cluster, int recordSize);
+    int partition(String topic, byte[] keyBytes, int recordSize);
 
     /**
      * This is called when partitioner is closed.

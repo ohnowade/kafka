@@ -64,7 +64,7 @@ public class RoundRobinPartitioner implements Partitioner {
         }
     }
 
-    public int partition(String topic, byte[] keyBytes, Cluster cluster, int recordSize) {
+    public int partition(String topic, byte[] keyBytes, int recordSize) {
         return 0;
     }
 

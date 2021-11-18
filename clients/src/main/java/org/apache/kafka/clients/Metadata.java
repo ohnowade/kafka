@@ -16,11 +16,7 @@
  */
 package org.apache.kafka.clients;
 
-import org.apache.kafka.common.Cluster;
-import org.apache.kafka.common.KafkaException;
-import org.apache.kafka.common.Node;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.Uuid;
+import org.apache.kafka.common.*;
 import org.apache.kafka.common.errors.InvalidMetadataException;
 import org.apache.kafka.common.errors.InvalidTopicException;
 import org.apache.kafka.common.errors.TopicAuthorizationException;
@@ -75,6 +71,7 @@ public class Metadata implements Closeable {
     private final ClusterResourceListeners clusterResourceListeners;
     private boolean isClosed;
     private final Map<TopicPartition, Integer> lastSeenLeaderEpochs;
+    private final FeedbackQueues feedbackQueues;
 
     /**
      * Create a new Metadata instance
@@ -103,6 +100,7 @@ public class Metadata implements Closeable {
         this.lastSeenLeaderEpochs = new HashMap<>();
         this.invalidTopics = Collections.emptySet();
         this.unauthorizedTopics = Collections.emptySet();
+        this.feedbackQueues = FeedbackQueues.getInstance();
     }
 
     /**
@@ -365,10 +363,7 @@ public class Metadata implements Closeable {
             }
         }
 
-        /**
-         * TODO: retrieve the newest Cluster and update the feedback queues here, or
-         * do the update inside MetadataCache class
-          */
+        this.feedbackQueues.updatePartitions(partitions, this.updateVersion);
 
         Map<Integer, Node> nodes = metadataResponse.brokersById();
         if (isPartialUpdate)

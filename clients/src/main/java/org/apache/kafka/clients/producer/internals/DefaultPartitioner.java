@@ -56,11 +56,10 @@ public class DefaultPartitioner implements Partitioner {
      *
      * @param topic      The topic name
      * @param keyBytes   The serialized key to partition on (or null if no key)
-     * @param cluster    The current cluster metadata
      * @param recordSize The size of the given reccord
      */
     @Override
-    public int partition(String topic, byte[] keyBytes, Cluster cluster, int recordSize) {
+    public int partition(String topic, byte[] keyBytes, int recordSize) {
         return 0;
     }
 

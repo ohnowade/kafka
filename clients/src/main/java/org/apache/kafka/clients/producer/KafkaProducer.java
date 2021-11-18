@@ -1349,7 +1349,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             return partition;
         } else {
             System.out.println("Partition the record using the feedback partitioner.");
-            return partitioner.partition(record.topic(), serializedKey, cluster, recordSize);
+            return partitioner.partition(record.topic(), serializedKey, recordSize);
         }
     }
 
