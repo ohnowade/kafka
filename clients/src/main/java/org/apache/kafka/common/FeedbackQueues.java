@@ -44,6 +44,8 @@ public class FeedbackQueues {
      */
     private int version;
 
+    private static final int ALLOTMENT = 1024;
+
     private final Lock lock = new ReentrantLock();
 
     /**
@@ -106,8 +108,6 @@ public class FeedbackQueues {
         private int prevPartition;
         private int prevPartitionIndex;
 
-        private static final int ALLOTMENT = 32 * 1024;
-
         public FeedbackQueue() {
             topQueue = new ArrayList<>();
             bottomQueue = new ArrayList<>();
@@ -145,7 +145,8 @@ public class FeedbackQueues {
                     prevPartition = prevPartitionIndex >= 0 ? topQueue.get(prevPartitionIndex) : -1;
                 }
                 counter.compute(prevPartition, (k, v) -> v + recordSize);
-                System.out.printf("Partition %d is chosen with %d bytes assigned to it.%n", prevPartition, recordSize);
+                System.out.printf("Partition %d is chosen with %d bytes assigned to it. Allotment Usage: %d bytes.%n",
+                        prevPartition, recordSize, counter.get(prevPartition));
                 return prevPartition;
         }
 
