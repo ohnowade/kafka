@@ -457,8 +457,6 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             this.ioThread.start();
             config.logUnused();
             AppInfoParser.registerAppInfo(JMX_PREFIX, clientId, metrics, time.milliseconds());
-            System.out.println("Hey I watched the video explaining the constructor of KafkaProducer. " +
-                    "It's cool. Hope I could finish the project.");
             log.debug("Kafka producer started");
         } catch (Throwable t) {
             // call close methods if internal objects are already constructed this is to prevent resource leak. see KAFKA-2121
