@@ -1169,6 +1169,11 @@ public class EosV2UpgradeIntegrationTest {
         }
 
         @Override
+        public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
+            return LONG_DESERIALIZER.deserialize(topic, keyBytes).intValue() % NUM_TOPIC_PARTITIONS;
+        }
+
+        @Override
         public void close() {}
 
         @Override

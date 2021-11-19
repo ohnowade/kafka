@@ -40,6 +40,10 @@ public class FeedbackPartitioner implements Partitioner {
         return feedbackQueues.getPartition(topic, recordSize);
     }
 
+    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
+        return 0;
+    }
+
     public void close() {}
     public void onNewBatch(String topic, Cluster cluster, int prevPartition) {}
     public void configure(Map<String, ?> configs) {}
