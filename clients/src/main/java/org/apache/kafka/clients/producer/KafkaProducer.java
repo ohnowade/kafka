@@ -35,12 +35,7 @@ import org.apache.kafka.clients.producer.internals.Sender;
 import org.apache.kafka.clients.producer.internals.TransactionManager;
 import org.apache.kafka.clients.producer.internals.TransactionalRequestResult;
 import org.apache.kafka.clients.producer.internals.ProducerMetrics;
-import org.apache.kafka.common.Cluster;
-import org.apache.kafka.common.KafkaException;
-import org.apache.kafka.common.Metric;
-import org.apache.kafka.common.MetricName;
-import org.apache.kafka.common.PartitionInfo;
-import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.*;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.errors.ApiException;
 import org.apache.kafka.common.errors.AuthenticationException;
@@ -261,6 +256,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     private final ProducerInterceptors<K, V> interceptors;
     private final ApiVersions apiVersions;
     private final TransactionManager transactionManager;
+    private final boolean isFeedBack;
 
     /**
      * A producer is instantiated by providing a set of key-value pairs as configuration. Valid configuration strings
@@ -364,11 +360,14 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             this.producerMetrics = new KafkaProducerMetrics(metrics);
 
             // set partitioner; default is DefaultPartitioner
-//            this.partitioner = config.getConfiguredInstance(
-//                    ProducerConfig.PARTITIONER_CLASS_CONFIG,
-//                    Partitioner.class,
-//                    Collections.singletonMap(ProducerConfig.CLIENT_ID_CONFIG, clientId));
-            this.partitioner = new FeedbackPartitioner();
+            this.partitioner = config.getConfiguredInstance(
+                    ProducerConfig.PARTITIONER_CLASS_CONFIG,
+                    Partitioner.class,
+                    Collections.singletonMap(ProducerConfig.CLIENT_ID_CONFIG, clientId));
+
+            this.isFeedBack = this.partitioner instanceof FeedbackPartitioner;
+
+            FeedbackQueues.setAllotment(config.getInt(ProducerConfig.FEEDBACK_QUEUE_ALLOTMENT));
 
             // set time between retries of failed requests
             long retryBackoffMs = config.getLong(ProducerConfig.RETRY_BACKOFF_MS_CONFIG);
@@ -990,12 +989,10 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             ensureValidRecordSize(serializedSize);
 
             // calculate partition
-            int partition = partition(record, serializedKey, cluster, serializedSize);
+            int partition = partition(record, serializedKey, serializedValue, cluster, serializedSize);
 
             // encapsulate partition object
             tp = new TopicPartition(record.topic(), partition);
-
-            // TODO: only need to update the queue, which is inside Cluster, after calculating the size of the record
 
             long timestamp = record.timestamp() == null ? nowMs : record.timestamp();
             if (log.isTraceEnabled()) {
@@ -1011,12 +1008,12 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
 
             // put the message into record accumulator for batching
             RecordAccumulator.RecordAppendResult result = accumulator.append(tp, timestamp, serializedKey,
-                    serializedValue, headers, interceptCallback, remainingWaitMs, false, nowMs);
+                    serializedValue, headers, interceptCallback, remainingWaitMs, !isFeedBack, nowMs);
 
             if (result.abortForNewBatch) {
                 int prevPartition = partition;
                 partitioner.onNewBatch(record.topic(), cluster, prevPartition);
-                partition = partition(record, serializedKey, cluster, serializedSize);
+                partition = partition(record, serializedKey, serializedValue, cluster, serializedSize);
                 tp = new TopicPartition(record.topic(), partition);
                 if (log.isTraceEnabled()) {
                     log.trace("Retrying append due to new batch creation for topic {} partition {}. The old partition was {}", record.topic(), partition, prevPartition);
@@ -1340,15 +1337,10 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * if the record has partition returns the value otherwise
      * calls configured partitioner class to compute the partition.
      */
-    private int partition(ProducerRecord<K, V> record, byte[] serializedKey, Cluster cluster, int recordSize) {
+    private int partition(ProducerRecord<K, V> record, byte[] serializedKey, byte[] serializedValue, Cluster cluster, int recordSize) {
         Integer partition = record.partition();
-        if (partition != null) {
-            System.out.printf("Record is already assigned a partition %d.%n", partition);
-            return partition;
-        } else {
-            System.out.println("Partition the record using the feedback partitioner.");
-            return partitioner.partition(record.topic(), serializedKey, recordSize);
-        }
+            return partition == null ? partitioner.partition(record.topic(), record.key(), serializedKey,
+                    record.value(), serializedValue, cluster, recordSize) : partition;
     }
 
     private void throwIfInvalidGroupMetadata(ConsumerGroupMetadata groupMetadata) {

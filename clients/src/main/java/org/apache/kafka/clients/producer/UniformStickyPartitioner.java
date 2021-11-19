@@ -49,12 +49,8 @@ public class UniformStickyPartitioner implements Partitioner {
      * @param valueBytes serialized value to partition on or null
      * @param cluster The current cluster metadata
      */
-    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
+    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster, int recordSize) {
         return stickyPartitionCache.partition(topic, cluster);
-    }
-
-    public int partition(String topic, byte[] keyBytes, int recordSize) {
-        return 0;
     }
 
     public void close() {}

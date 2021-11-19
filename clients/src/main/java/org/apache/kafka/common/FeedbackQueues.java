@@ -44,7 +44,7 @@ public class FeedbackQueues {
      */
     private int version;
 
-    private static final int ALLOTMENT = 1024;
+    private static int allotment = 32 * 1024;
 
     private final Lock lock = new ReentrantLock();
 
@@ -54,6 +54,14 @@ public class FeedbackQueues {
      */
     public static FeedbackQueues getInstance() {
         return FeedbackQueues.instance;
+    }
+
+    /**
+     * Set the allotment of each partition.
+     * @param configAllotment the allotment to be set.
+     */
+    public static void setAllotment(int configAllotment) {
+        allotment = configAllotment;
     }
 
     /**
@@ -132,7 +140,7 @@ public class FeedbackQueues {
                     System.out.println("Feedback Queue just initialized.");
                     prevPartitionIndex = selectAndClean();
                     prevPartition = prevPartitionIndex >= 0 ? topQueue.get(prevPartitionIndex) : -1;
-                } else if (counter.get(prevPartition) >= ALLOTMENT) {
+                } else if (counter.get(prevPartition) >= allotment) {
                     System.out.printf("Partition %d used up its allotment. ", prevPartition);
                     bottomQueue.add(prevPartition);
                     counter.put(prevPartition, 0);

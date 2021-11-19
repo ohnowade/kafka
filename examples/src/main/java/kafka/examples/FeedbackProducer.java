@@ -17,8 +17,9 @@ public class FeedbackProducer extends Thread{
     private final Random srandom = new Random();
     private final Random irandom = new Random();
     private final Map<Integer, Integer> partitionSize = new HashMap<>();
+    private final Map<Integer, Integer> recordCount = new HashMap<>();
 
-    public FeedbackProducer() {
+    public FeedbackProducer(String partitioner, int allotment) {
         Properties prop = new Properties();
         prop.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaProperties.KAFKA_SERVER_URL +
                 ":" +
@@ -26,6 +27,8 @@ public class FeedbackProducer extends Thread{
         prop.put(ProducerConfig.CLIENT_ID_CONFIG, "FeedbackProducer");
         prop.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class.getName());
         prop.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        prop.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, partitioner);
+        prop.put(ProducerConfig.FEEDBACK_QUEUE_ALLOTMENT, allotment);
 
         producer = new KafkaProducer<Integer, String>(prop);
     }
@@ -40,18 +43,21 @@ public class FeedbackProducer extends Thread{
                     null,
                     getNextMessage()),
                     (RecordMetadata record, Exception exception) -> {
-                        if (record != null)
+                        if (record != null) {
                             partitionSize.compute(record.partition(), (k, v) -> v == null ?
-                                                record.serializedValueSize() :
-                                                v + record.serializedKeySize());
+                                    record.serializedValueSize() :
+                                    v + record.serializedKeySize());
+                            recordCount.compute(record.partition(), (k, v) -> v == null ? 1 : v + 1);
+                        }
                         else exception.printStackTrace();
                     });
             recordSent++;
         }
         System.out.println("Message sent complete.");
         System.out.printf("Sent %d records for 10 minutes.%n", recordSent);
-        for (Map.Entry<Integer, Integer> ps : partitionSize.entrySet()) {
-            System.out.printf("Partition %d receives %d bytes of data.%n", ps.getKey(), ps.getValue());
+        for (int partition : partitionSize.keySet()) {
+            System.out.printf("Partition %d receives %d records with %d bytes of data.%n",
+                    partition, recordCount.get(partition), partitionSize.get(partition));
         }
     }
 

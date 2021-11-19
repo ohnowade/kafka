@@ -50,7 +50,7 @@ public class RoundRobinPartitioner implements Partitioner {
      * @param cluster The current cluster metadata
      */
     @Override
-    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
+    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster, int recordSize) {
         List<PartitionInfo> partitions = cluster.partitionsForTopic(topic);
         int numPartitions = partitions.size();
         int nextValue = nextValue(topic);

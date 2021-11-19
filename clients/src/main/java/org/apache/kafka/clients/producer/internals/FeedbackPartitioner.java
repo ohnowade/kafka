@@ -26,22 +26,21 @@ public class FeedbackPartitioner implements Partitioner {
     FeedbackQueues feedbackQueues = FeedbackQueues.getInstance();
 
     /**
-     * Compute the partition for the record
+     * Compute the partition for the given record.
      *
      * @param topic      The topic name
-     * @param keyBytes   The serialized key to partition on (or null if no key)
-     * @param recordSize The size of the given record
+     * @param key        The key to partition on (or null if no key)
+     * @param keyBytes   The serialized key to partition on( or null if no key)
+     * @param value      The value to partition on or null
+     * @param valueBytes The serialized value to partition on or null
+     * @param cluster    The current cluster metadata
+     * @param recordSize The size of the record to be sent
      */
-    public int partition(String topic, byte[] keyBytes, int recordSize) {
+    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster, int recordSize) {
         return feedbackQueues.getPartition(topic, recordSize);
     }
 
-    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
-        return 0;
-    }
     public void close() {}
-    public void onNewBatch(String topic, Cluster cluster, int prevPartition) {
-        Partitioner.super.onNewBatch(topic, cluster, prevPartition);
-    }
+    public void onNewBatch(String topic, Cluster cluster, int prevPartition) {}
     public void configure(Map<String, ?> configs) {}
 }

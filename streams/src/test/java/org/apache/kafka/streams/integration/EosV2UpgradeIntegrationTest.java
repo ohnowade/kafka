@@ -1164,13 +1164,8 @@ public class EosV2UpgradeIntegrationTest {
                              final byte[] keyBytes,
                              final Object value,
                              final byte[] valueBytes,
-                             final Cluster cluster) {
+                             final Cluster cluster, final int recrodSize) {
             return LONG_DESERIALIZER.deserialize(topic, keyBytes).intValue() % NUM_TOPIC_PARTITIONS;
-        }
-
-        @Override
-        public int partition(String topic, byte[] keyBytes, int recordSize) {
-            return 0;
         }
 
         @Override

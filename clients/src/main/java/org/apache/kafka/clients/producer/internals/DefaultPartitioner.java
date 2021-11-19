@@ -47,35 +47,8 @@ public class DefaultPartitioner implements Partitioner {
      * @param valueBytes serialized value to partition on or null
      * @param cluster The current cluster metadata
      */
-    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
-        return partition(topic, key, keyBytes, value, valueBytes, cluster, cluster.partitionsForTopic(topic).size());
-    }
-
-    /**
-     * Compute the partition for the record
-     *
-     * @param topic      The topic name
-     * @param keyBytes   The serialized key to partition on (or null if no key)
-     * @param recordSize The size of the given reccord
-     */
-    @Override
-    public int partition(String topic, byte[] keyBytes, int recordSize) {
-        return 0;
-    }
-
-    /**
-     * Compute the partition for the given record.
-     *
-     * @param topic The topic name
-     * @param numPartitions The number of partitions of the given {@code topic}
-     * @param key The key to partition on (or null if no key)
-     * @param keyBytes serialized key to partition on (or null if no key)
-     * @param value The value to partition on or null
-     * @param valueBytes serialized value to partition on or null
-     * @param cluster The current cluster metadata
-     */
-    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster,
-                         int numPartitions) {
+    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster, int recordSize) {
+        int numPartitions = cluster.partitionsForTopic(topic).size();
         if (keyBytes == null) {
             return stickyPartitionCache.partition(topic, cluster);
         }

@@ -62,6 +62,11 @@ public class ProducerConfig extends AbstractConfig {
     public static final String METADATA_MAX_AGE_CONFIG = CommonClientConfigs.METADATA_MAX_AGE_CONFIG;
     private static final String METADATA_MAX_AGE_DOC = CommonClientConfigs.METADATA_MAX_AGE_DOC;
 
+    public static final String FEEDBACK_QUEUE_ALLOTMENT = "feedback.queue.allotment";
+    private static final String FEEDBACK_QUEUE_ALLOTMENT_DOC =
+            "Specifies the allotment of the Feedback Queue, i.e. the size of bytes that can " +
+                    "be assigned to a partition on the top queue before it will be moved down to the bottom queue.";
+
     /** <code>metadata.max.idle.ms</code> */
     public static final String METADATA_MAX_IDLE_CONFIG = "metadata.max.idle.ms";
     private static final String METADATA_MAX_IDLE_DOC =
@@ -312,6 +317,7 @@ public class ProducerConfig extends AbstractConfig {
                                         Importance.LOW,
                                         ACKS_DOC)
                                 .define(COMPRESSION_TYPE_CONFIG, Type.STRING, "none", Importance.HIGH, COMPRESSION_TYPE_DOC)
+                                .define(FEEDBACK_QUEUE_ALLOTMENT, Type.INT, 16 * 1024, atLeast(0), Importance.MEDIUM, FEEDBACK_QUEUE_ALLOTMENT_DOC)
                                 .define(BATCH_SIZE_CONFIG, Type.INT, 16384, atLeast(0), Importance.MEDIUM, BATCH_SIZE_DOC)
                                 .define(LINGER_MS_CONFIG, Type.LONG, 0, atLeast(0), Importance.MEDIUM, LINGER_MS_DOC)
                                 .define(DELIVERY_TIMEOUT_MS_CONFIG, Type.INT, 120 * 1000, atLeast(0), Importance.MEDIUM, DELIVERY_TIMEOUT_MS_DOC)
