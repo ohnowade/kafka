@@ -12,8 +12,6 @@ import java.util.Random;
 public class FeedbackProducer extends Thread{
     private final KafkaProducer<Integer, String> producer;
     private final String topic = "UCLA";
-    private final int left = 97;
-    private final int right = 122;
     private final Random srandom = new Random();
     private final Random irandom = new Random();
     private final Map<Integer, Integer> partitionSize = new HashMap<>();
@@ -30,7 +28,7 @@ public class FeedbackProducer extends Thread{
         prop.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, partitioner);
         prop.put(ProducerConfig.FEEDBACK_QUEUE_ALLOTMENT, allotment);
 
-        producer = new KafkaProducer<Integer, String>(prop);
+        producer = new KafkaProducer<>(prop);
     }
 
     @Override
@@ -62,7 +60,7 @@ public class FeedbackProducer extends Thread{
     }
 
     private String getNextMessage() {
-        return srandom.ints(left, right+1)
+        return srandom.ints(97, 123)
                 .limit(irandom.nextInt(1000)+1)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
