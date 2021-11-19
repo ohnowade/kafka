@@ -9,7 +9,7 @@ public class FeedbackPartitionerTest {
         } else if (args.length > 0 && args[0].toLowerCase().equals("round-robin")) {
             partitioner += ".RoundRobinPartitioner";
         } else {
-            partitioner += ".internals..internals.DefaultPartitioner";
+            partitioner += ".internals.DefaultPartitioner";
         }
         int allotment = 32 * 1024;
         if (args.length > 1) allotment = Integer.parseInt(args[1]);
