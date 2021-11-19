@@ -1,4 +1,4 @@
-#!/bin/bash
+cktan#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -40,5 +40,7 @@ case $COMMAND in
   *)
     ;;
 esac
+
+export JMX_PORT=${JMX_PORT:-9999}
 
 exec $base_dir/kafka-run-class.sh $EXTRA_ARGS kafka.Kafka "$@"
