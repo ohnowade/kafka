@@ -1,8 +1,14 @@
 package kafka.examples;
 
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+
+import java.util.Properties;
+
 public class FeedbackPartitionerTest {
     public static void main(String[] args) {
         System.out.println("Feedback Partitioner test starts.");
+
         String partitioner = "org.apache.kafka.clients.producer";
         if (args.length > 0 && args[0].toLowerCase().equals("feedback")) {
             partitioner += ".internals.FeedbackPartitioner";

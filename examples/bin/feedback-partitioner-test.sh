@@ -19,4 +19,8 @@ if [ "x$KAFKA_HEAP_OPTS" = "x" ]; then
     export KAFKA_HEAP_OPTS="-Xmx512M"
 fi
 
-exec $base_dir/bin/kafka-run-class.sh kafka.examples.FeedbackPartitionerTest $@
+source $base_dir/bin/kafka-topics.sh --create --topic UCLA --partitions 9 --replication-factor 1 --bootstrap-server 172.31.19.157:9092
+
+source $base_dir/bin/kafka-run-class.sh kafka.examples.FeedbackPartitionerTest $@
+
+exec $base_dir/bin/kafka-topics.sh -- delete --topic UCLA

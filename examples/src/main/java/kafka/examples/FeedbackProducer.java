@@ -34,7 +34,7 @@ public class FeedbackProducer extends Thread{
     @Override
     public void run() {
         long startTime = System.currentTimeMillis();
-        long endTime = startTime + 10 * 60 * 1000;
+        long endTime = startTime + 60 * 1000;
         int recordSent = 0;
         while (System.currentTimeMillis() < endTime) {
             producer.send(new ProducerRecord<>(topic,
@@ -52,7 +52,7 @@ public class FeedbackProducer extends Thread{
             recordSent++;
         }
         System.out.println("Message sent complete.");
-        System.out.printf("Sent %d records for 10 minutes.%n", recordSent);
+        System.out.printf("Sent %d records for 1 minute.%n", recordSent);
         for (int partition : partitionSize.keySet()) {
             System.out.printf("Partition %d receives %d records with %d bytes of data.%n",
                     partition, recordCount.get(partition), partitionSize.get(partition));
@@ -61,7 +61,7 @@ public class FeedbackProducer extends Thread{
 
     private String getNextMessage() {
         return srandom.ints(97, 123)
-                .limit(irandom.nextInt(1000)+1)
+                .limit(irandom.nextInt(200)+1)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
     }
