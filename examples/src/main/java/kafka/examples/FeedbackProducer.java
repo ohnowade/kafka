@@ -14,7 +14,7 @@ public class FeedbackProducer extends Thread{
     private final String topic = "UCLA";
     private final Random srandom = new Random();
     private final Random irandom = new Random();
-    private final Map<Integer, Integer> partitionSize = new HashMap<>();
+    private final Map<Integer, Long> partitionSize = new HashMap<>();
     private final Map<Integer, Integer> recordCount = new HashMap<>();
 
     public FeedbackProducer(String partitioner, int allotment) {
@@ -43,7 +43,7 @@ public class FeedbackProducer extends Thread{
                     (RecordMetadata record, Exception exception) -> {
                         if (record != null) {
                             partitionSize.compute(record.partition(), (k, v) -> v == null ?
-                                    record.serializedValueSize() :
+                                    (long)(record.serializedValueSize()) :
                                     v + record.serializedKeySize());
                             recordCount.compute(record.partition(), (k, v) -> v == null ? 1 : v + 1);
                         }

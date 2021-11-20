@@ -16,7 +16,9 @@ public class FeedbackPartitionerTest {
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.31.19.157:9092");
         AdminClient adminClient = KafkaAdminClient.create(props);
         List<NewTopic> topicList = new ArrayList<>();
+        List<String> topicName = new ArrayList<>();
         topicList.add(new NewTopic("UCLA", 9, (short)1));
+        topicName.add("UCLA");
         CreateTopicsResult res = adminClient.createTopics(topicList);
         try {
             res.all().get();
