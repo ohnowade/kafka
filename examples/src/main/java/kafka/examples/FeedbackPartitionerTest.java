@@ -45,7 +45,10 @@ public class FeedbackPartitionerTest {
 
         String[] temp = partitioner.split("\\.");
         String partitionerName = temp[temp.length-1];
-        System.out.printf("Feedback Partitioner test starts using the %s.%n", partitionerName);
+        System.out.printf("Feedback Partitioner test starts using the %s.", partitionerName);
+        if (partitionerName.equals("FeedbackPartitioner")) {
+            System.out.printf("Using Allotment: %d bytes.%n", allotment);
+        } else System.out.println();
 
         producer.start();
         try {
