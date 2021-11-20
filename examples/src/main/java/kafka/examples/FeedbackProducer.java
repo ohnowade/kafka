@@ -14,8 +14,8 @@ public class FeedbackProducer extends Thread{
     private final String topic = "UCLA";
     private final Random srandom = new Random();
     private final Random irandom = new Random();
-    private final Map<Integer, Long> partitionSize = new HashMap<>();
-    private final Map<Integer, Integer> recordCount = new HashMap<>();
+    private final long[] partitionSize = new long[9];
+    private final int[] partitionCount = new int[9];
 
     public FeedbackProducer(String partitioner, int allotment) {
         Properties prop = new Properties();
@@ -42,10 +42,8 @@ public class FeedbackProducer extends Thread{
                     getNextMessage()),
                     (RecordMetadata record, Exception exception) -> {
                         if (record != null) {
-                            partitionSize.compute(record.partition(), (k, v) -> v == null ?
-                                    (long)(record.serializedValueSize()) :
-                                    v + record.serializedKeySize());
-                            recordCount.compute(record.partition(), (k, v) -> v == null ? 1 : v + 1);
+                            partitionSize[record.partition()] += record.serializedValueSize();
+                            partitionCount[record.partition()]++;
                         }
                         else exception.printStackTrace();
                     });
@@ -53,9 +51,9 @@ public class FeedbackProducer extends Thread{
         }
         System.out.println("Message sent complete.");
         System.out.printf("Sent %d records for 1 minute.%n", recordSent);
-        for (int partition : partitionSize.keySet()) {
+        for (int i = 0; i < 9; i++) {
             System.out.printf("Partition %d receives %d records with %d bytes of data.%n",
-                    partition, recordCount.get(partition), partitionSize.get(partition));
+                    i, partitionCount[i], partitionSize[i]);
         }
     }
 
