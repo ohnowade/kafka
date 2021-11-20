@@ -135,13 +135,10 @@ public class FeedbackQueues {
         }
 
         private int nextPartition(int recordSize) {
-                System.out.println("Getting next partition.");
                 if (prevPartition < 0) {
-                    System.out.println("Feedback Queue just initialized.");
                     prevPartitionIndex = selectAndClean();
                     prevPartition = prevPartitionIndex >= 0 ? topQueue.get(prevPartitionIndex) : -1;
                 } else if (counter.get(prevPartition) >= allotment) {
-                    System.out.printf("Partition %d used up its allotment. ", prevPartition);
                     bottomQueue.add(prevPartition);
                     counter.put(prevPartition, 0);
                     removeFromTopQueue(prevPartitionIndex);
@@ -153,8 +150,6 @@ public class FeedbackQueues {
                     prevPartition = prevPartitionIndex >= 0 ? topQueue.get(prevPartitionIndex) : -1;
                 }
                 counter.compute(prevPartition, (k, v) -> v + recordSize);
-                System.out.printf("Partition %d is chosen with %d bytes assigned to it. Allotment Usage: %d bytes.%n",
-                        prevPartition, recordSize, counter.get(prevPartition));
                 return prevPartition;
         }
 
