@@ -43,7 +43,7 @@ public class FeedbackPartitionerTest {
 
         FeedbackProducer producer = new FeedbackProducer(partitioner, allotment);
 
-        String[] temp = partitioner.split(".");
+        String[] temp = partitioner.split("\\.");
         String partitionerName = temp[temp.length-1];
         System.out.printf("Feedback Partitioner test starts using the %s.%n", partitionerName);
 
