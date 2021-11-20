@@ -366,6 +366,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     Collections.singletonMap(ProducerConfig.CLIENT_ID_CONFIG, clientId));
 
             System.out.printf("Using the %s.%n", partitioner.getClass().toString());
+            System.out.printf("The allotment is %d.%n", config.getInt(ProducerConfig.FEEDBACK_QUEUE_ALLOTMENT));
 
             this.isFeedBack = this.partitioner instanceof FeedbackPartitioner;
 
